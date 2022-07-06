@@ -10,8 +10,7 @@ namespace ServiceExercise {
 
         static void Main(string[] args) {
 
-            RequestsService service = RequestsService.Instance;
-            service.setNumberOfConnections(CONNECTION_COUNT);
+            RequestsService service = new RequestsService(CONNECTION_COUNT);
 
             List<Task> clientTasks = new List<Task>();
 

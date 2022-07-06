@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Net;
 using System.Text;
 using System.Threading;
@@ -10,204 +11,69 @@ namespace ServiceExercise
 {
     public sealed class RequestsService : IService
     {
-        private static object syncRoot = new Object();
-        private static RequestsService? instance;
-        static int maxConnections = 0;
-        private static Connection connection = new Connection();
-        private static int currentConnectionsNumber = 0;
         private static int _sum = 0;
-        private static ConcurrentBag<Request> requests = null;
-        private object _lock = new object();
+        Stopwatch watch = null;
 
+        private static Connection[] connectionArray;
 
-        public static RequestsService Instance
+     
+        public RequestsService(int _MaxConnections)
         {
-            get
-            {
-                if (instance == null)
-                {
-                    lock (syncRoot)
-                    {
-                        if (instance == null)
-                        {
-                            Console.WriteLine("service created");
-                            instance = new RequestsService(maxConnections);
-                        }
-                    }
-                }
-                return instance;
-            }
+            connectionArray = new Connection[_MaxConnections];
+            watch = System.Diagnostics.Stopwatch.StartNew();
         }
-
-        public void setNumberOfConnections(int numberOfConnections)
-        {
-            maxConnections = numberOfConnections;
-        }
-        private RequestsService(int _MaxConnections)
-        {
-            maxConnections = _MaxConnections;
-        }
-
-        private RequestsService(IAsyncEnumerable<Request> stream)
-        {
-            
-        }
-
-
+ 
 
         public int getSummary()
         {
-             return _sum;
-        }
-
-        // should not block
-        public void sendRequest(Request request)
-        {
-            Console.WriteLine("sendRequest called");
-            List<Connection> connections = new List<Connection>(maxConnections);
-
-            //requests = new ConcurrentBag<Request>();
-
-
-            // Task.Run(() => {
-            //    requests.Add(request);
-
-            //});
-            //while (request != null)
-            //{
-            //    requests.Add(request);
-            //}
-
-            int i = 0;
-
-            while (i < maxConnections) {
-                Console.WriteLine($"new connection - { i }");
-                connections.Add(new Connection());
-                i++;
-            }
-
-
-
-
-
-            lock (_lock)
-            {
-                Console.WriteLine("Entered lock");
-                Task.Run(() =>
-                {
-                    foreach (var connection in connections)
-                    {
-                        Console.WriteLine(connection.GetHashCode());
-                        Connect(connection, request);
-                    }
-                });
-            }
-
-            //startRunAsyncTask(request);Task<int> result = 
-
-            //int number = 0;
-            //while (currentConnectionsNumber < maxConnections)
-            //{
-            //    //connection.runCommand(request.Command);
-            //    number += runAsyncTask(request).Result;
-            //}
-
-            Console.WriteLine("sendRequest ended");
-        }
-
-        public static async void Connect(Connection connection, Request request)
-        {
-            Console.WriteLine("Connect");
-            var tasks = new List<Task<int>>();
-            //int sum = 0;
-
-            await Task.Run(() =>
-            {
-                //Interlocked.Add(ref sum, connection.runCommand(request.Command));
-                var response = ProcessCard(connection, request);
-                tasks.Add(response);
-            });
-
-            //It will execute all the tasks concurrently
-            await Task.WhenAll(tasks);
-        }
-
-         
-
-        public static async Task<int> ProcessCard(Connection connection, Request request)
-        {   
-
-            Action action = () => { Interlocked.Add(ref _sum, connection.runCommand(request.Command)); };
-            Task t1 = new Task(action);
-            
-            //await Task.Delay(1000);
-            //await t1.Start();
-            //string message = $"Credit Card Number: {creditCard.CardNumber} Name: {creditCard.Name} Processed";
-            await Task.Run(action);
-            string message = $"Credit Card Number: {_sum } Processed";
+            watch.Stop();
+            var elapsedMs = watch.ElapsedMilliseconds;
+            Console.WriteLine($"Total execution time: { elapsedMs }");
             return _sum;
         }
 
-        //private int startRunAsyncTask(Request request)
-        //{
-        //    int number = 0;
-        //    while (currentConnectionsNumber < maxConnections)
-        //    {
-        //        //connection.runCommand(request.Command);
-        //        number += runAsyncTask(request).Result;
-        //    }
-        //    return number;
+        // should not block
+        public async void sendRequest(Request request)
+        {
+            Console.WriteLine("sendRequest called");
+            Random random = new Random();
 
-        //}
+            int i = random.Next(0, connectionArray.Length);
 
-        //public static async Task Foo(int sum, Request request)
-        //{
-        //    Console.WriteLine("Thread {0} - Start {1}", Thread.CurrentThread.ManagedThreadId, sum);
+            connectionArray[i] = new Connection();
 
-        //    //await Task.Delay(1000);
-        //    Action action = () => { Interlocked.Add(ref sum, connection.runCommand(request.Command)); };
-        //    Task t1;
-        //    t1 = new Task(action);
+            Console.WriteLine($"using connection number - #{ i }.");
 
-        //    await Task.Run(() => t1.Start());
-        //    //t1.Start();
+            await ConnectAndSendRequestParallelAsync(connectionArray[i], request);
 
-        //    Console.WriteLine("Thread {0} - End {1}", Thread.CurrentThread.ManagedThreadId, sum);
-        //}
+            Console.WriteLine("sendRequest ended");
+        }
+ 
 
-        //private async Task<int> runAsyncTask(Request request)
-        //{
+        public static async Task ConnectAndSendRequestParallelAsync(Connection connection, Request request)
+        {
+            Console.WriteLine("ConnectAndSendRequestParallelAsync");
+            List<Task<int>> tasks = new List<Task<int>>();
+            //int sum = 0;
 
-        //    try
-        //    {
-        //        int sum = 0;
-        //        Task t1 = null;
-        //        var tasks = new List<Task>();
+            tasks.Add(Task.Run(() => ProcessCard(connection, request)));
+            
 
-        //        //Action action = () => { Interlocked.Add(ref sum,connection.runCommand(request.Command)); };
+            var results = await Task.WhenAll(tasks);
 
-        //        //Action action = () => { Interlocked.Add(ref sum, connection.runCommand(request.Command)); };
+            foreach (var item in results)
+            {
+                //_sum
+                //Console.WriteLine(item);
+                Interlocked.Add(ref _sum, connection.runCommand(request.Command));
+            }
+            //It will execute all the tasks concurrently
+        }
 
+        public static int ProcessCard(Connection connection, Request request)
+        {
+            return connection.runCommand(request.Command);
+        }
 
-
-        //        //t1 = new Task(action);
-
-        //        while (currentConnectionsNumber < maxConnections)
-        //        {
-        //            tasks.Add(Foo(sum, request));              
-        //            //await t1.Start();
-        //            currentConnectionsNumber++;
-        //        }
-
-        //        Task.WaitAll(tasks.ToArray());
-        //        return sum;
-
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        throw ex;
-        //    }
-
-        //}
     }
 }
