@@ -11,6 +11,9 @@ namespace ServiceExercise
         private static object syncRoot = new Object();
         private static RequestsService? instance;
         static int maxConnections = 0;
+        private static Connection connection = new Connection();
+        private static int currentConnectionsNumber = 0;
+
 
         public static RequestsService Instance
         {
@@ -46,21 +49,51 @@ namespace ServiceExercise
         // should not block
         public void sendRequest(Request request)
         {
-            startRunAsyncTask(request);
-            
-        }
 
-        private Task startRunAsyncTask(Request request)
-        {
-            return runAsyncTask(request);
-        }
+            //startRunAsyncTask(request);Task<int> result = 
 
-        private async Task runAsyncTask(Request request)
-        {
-            await Task.Run(() =>
+            int number = 0;
+            while (currentConnectionsNumber < maxConnections)
             {
-                Console.WriteLine(request.Command);
-            });
+                //connection.runCommand(request.Command);
+                number += runAsyncTask(request).Result;
+            }
+
+
+        }
+
+        //private int startRunAsyncTask(Request request)
+        //{
+        //    int number = 0;
+        //    while (currentConnectionsNumber < maxConnections)
+        //    {
+        //        //connection.runCommand(request.Command);
+        //        number += runAsyncTask(request).Result;
+        //    }
+        //    return number;
+
+        //}
+
+        private async Task<int> runAsyncTask(Request request)
+        {
+
+            try
+            {
+
+
+                await Task.Run(() =>
+                {
+                    return connection.runCommand(request.Command);
+                });
+
+                return Task.Result;
+
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+
         }
     }
 }
