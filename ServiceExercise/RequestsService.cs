@@ -17,6 +17,8 @@ namespace ServiceExercise
         private static int currentConnectionsNumber = 0;
         private static int _sum = 0;
         private static ConcurrentBag<Request> requests = null;
+        private object _lock = new object();
+
 
         public static RequestsService Instance
         {
@@ -28,6 +30,7 @@ namespace ServiceExercise
                     {
                         if (instance == null)
                         {
+                            Console.WriteLine("service created");
                             instance = new RequestsService(maxConnections);
                         }
                     }
@@ -51,14 +54,6 @@ namespace ServiceExercise
         }
 
 
-        private static async IAsyncEnumerable<string> GenerateNames()
-        {
-            yield return "Anurag";
-            yield return "Pranaya";
-            await Task.Delay(TimeSpan.FromSeconds(3));
-            yield return "Sambit";
-        }
-
 
         public int getSummary()
         {
@@ -68,6 +63,7 @@ namespace ServiceExercise
         // should not block
         public void sendRequest(Request request)
         {
+            Console.WriteLine("sendRequest called");
             List<Connection> connections = new List<Connection>(maxConnections);
 
             //requests = new ConcurrentBag<Request>();
@@ -83,15 +79,30 @@ namespace ServiceExercise
             //}
 
             int i = 0;
+
             while (i < maxConnections) {
+                Console.WriteLine($"new connection - { i }");
                 connections.Add(new Connection());
                 i++;
             }
 
-            foreach (var connection in connections)
+
+
+
+
+            lock (_lock)
             {
-                Connect(connection, request);
+                Console.WriteLine("Entered lock");
+                Task.Run(() =>
+                {
+                    foreach (var connection in connections)
+                    {
+                        Console.WriteLine(connection.GetHashCode());
+                        Connect(connection, request);
+                    }
+                });
             }
+
             //startRunAsyncTask(request);Task<int> result = 
 
             //int number = 0;
@@ -101,11 +112,12 @@ namespace ServiceExercise
             //    number += runAsyncTask(request).Result;
             //}
 
-
+            Console.WriteLine("sendRequest ended");
         }
 
         public static async void Connect(Connection connection, Request request)
         {
+            Console.WriteLine("Connect");
             var tasks = new List<Task<int>>();
             //int sum = 0;
 
@@ -148,54 +160,54 @@ namespace ServiceExercise
 
         //}
 
-        public static async Task Foo(int sum, Request request)
-        {
-            Console.WriteLine("Thread {0} - Start {1}", Thread.CurrentThread.ManagedThreadId, sum);
+        //public static async Task Foo(int sum, Request request)
+        //{
+        //    Console.WriteLine("Thread {0} - Start {1}", Thread.CurrentThread.ManagedThreadId, sum);
 
-            //await Task.Delay(1000);
-            Action action = () => { Interlocked.Add(ref sum, connection.runCommand(request.Command)); };
-            Task t1;
-            t1 = new Task(action);
+        //    //await Task.Delay(1000);
+        //    Action action = () => { Interlocked.Add(ref sum, connection.runCommand(request.Command)); };
+        //    Task t1;
+        //    t1 = new Task(action);
 
-            await Task.Run(() => t1.Start());
-            //t1.Start();
+        //    await Task.Run(() => t1.Start());
+        //    //t1.Start();
 
-            Console.WriteLine("Thread {0} - End {1}", Thread.CurrentThread.ManagedThreadId, sum);
-        }
+        //    Console.WriteLine("Thread {0} - End {1}", Thread.CurrentThread.ManagedThreadId, sum);
+        //}
 
-        private async Task<int> runAsyncTask(Request request)
-        {
+        //private async Task<int> runAsyncTask(Request request)
+        //{
 
-            try
-            {
-                int sum = 0;
-                Task t1 = null;
-                var tasks = new List<Task>();
+        //    try
+        //    {
+        //        int sum = 0;
+        //        Task t1 = null;
+        //        var tasks = new List<Task>();
 
-                //Action action = () => { Interlocked.Add(ref sum,connection.runCommand(request.Command)); };
+        //        //Action action = () => { Interlocked.Add(ref sum,connection.runCommand(request.Command)); };
 
-                //Action action = () => { Interlocked.Add(ref sum, connection.runCommand(request.Command)); };
+        //        //Action action = () => { Interlocked.Add(ref sum, connection.runCommand(request.Command)); };
 
 
 
-                //t1 = new Task(action);
+        //        //t1 = new Task(action);
 
-                while (currentConnectionsNumber < maxConnections)
-                {
-                    tasks.Add(Foo(sum, request));              
-                    //await t1.Start();
-                    currentConnectionsNumber++;
-                }
+        //        while (currentConnectionsNumber < maxConnections)
+        //        {
+        //            tasks.Add(Foo(sum, request));              
+        //            //await t1.Start();
+        //            currentConnectionsNumber++;
+        //        }
 
-                Task.WaitAll(tasks.ToArray());
-                return sum;
+        //        Task.WaitAll(tasks.ToArray());
+        //        return sum;
 
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        throw ex;
+        //    }
 
-        }
+        //}
     }
 }
