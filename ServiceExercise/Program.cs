@@ -9,7 +9,10 @@ namespace ServiceExercise {
         private const int CLIENTS_COUNT = 3;
 
         static void Main(string[] args) {
-            IService service = null; /*** CREATE YOUR SERVICE HERE ***/
+
+            RequestsService service = RequestsService.Instance;
+            service.setNumberOfConnections(CONNECTION_COUNT);
+
             List<Task> clientTasks = new List<Task>();
 
             for (int i = 0; i < CLIENTS_COUNT; i++) {
