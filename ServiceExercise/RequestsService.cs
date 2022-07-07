@@ -57,23 +57,38 @@ namespace ServiceExercise
 
         public static async Task ConnectAndSendRequestParallelAsync(Connection connection, Request request)
         {
-            Console.WriteLine("ConnectAndSendRequestParallelAsync");
+            Console.WriteLine("ConnectAndSendRequestParallelAsync started");
             List<Task<int>> tasks = new List<Task<int>>();
 
-            tasks.Add(Task.Run(() => ConnectionRunCommand(connection, request)));
-            
-
-            var results = await Task.WhenAll(tasks);
-
-            foreach (var item in results)
+            try
             {
-                Interlocked.Add(ref _sum, item);
+
+                tasks.Add(Task.Run(() => ConnectionRunCommand(connection, request)));
+
+                var results = await Task.WhenAll(tasks);
+
+                foreach (var item in results)
+                {
+                    Interlocked.Add(ref _sum, item);
+                }
+                Console.WriteLine("ConnectAndSendRequestParallelAsync ended");
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
             }
         }
 
         public static int ConnectionRunCommand(Connection connection, Request request)
         {
-            return connection.runCommand(request.Command);
+            try
+            {
+                return connection.runCommand(request.Command);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
         }
 
     }
