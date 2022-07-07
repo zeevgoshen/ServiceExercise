@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
@@ -13,7 +14,7 @@ namespace ServiceExercise
         private static Connection[] connectionArray;
         private object              _lock = new object();
         static Task t;
-        static List<Task<int>> tasks = new List<Task<int>>();
+        static ConcurrentBag<Task<int>> tasks = new ConcurrentBag<Task<int>>();
         public RequestsService(int _MaxConnections)
         {
             connectionArray = new Connection[_MaxConnections];
