@@ -44,8 +44,11 @@ namespace ServiceExercise
                 {
                     lock (_lock)
                     {
-                        connectionArray[i] = new Connection();
-                        Console.WriteLine($"Creating a new connection:  #{ i }.");
+                        if (connectionArray[i] == null)
+                        {
+                            connectionArray[i] = new Connection();
+                            Console.WriteLine($" --- Creating a new connection:  #{ i }. ---");
+                        }
                     }
                 }
 
