@@ -9,13 +9,13 @@ namespace ServiceExercise
 {
     public sealed class RequestsService : IService
     {
-        private static int                      sum = 0;
-        private Stopwatch                       watch = null;
-        private static Connection[]             connectionArray;
-        private object                          syncLock = new object();
-        private static Task                     mainTask;
-        private static ConcurrentBag<Task<int>> concurrentTasks = new ConcurrentBag<Task<int>>();
-        private static int                      numberOfClients = 0;
+        private int                         sum = 0;
+        private Stopwatch                   watch = null;
+        private Connection[]                connectionArray;
+        private object                      syncLock = new object();
+        private Task                        mainTask;
+        private ConcurrentBag<Task<int>>    concurrentTasks = new ConcurrentBag<Task<int>>();
+        private int                         numberOfClients = 0;
 
         public RequestsService(int _maxConnections, int _numberOfClients)
         {
@@ -93,7 +93,7 @@ namespace ServiceExercise
             }
         }
 
-        private static async Task ConnectAndSendRequestParallelAsync(Connection connection, Request request)
+        private async Task ConnectAndSendRequestParallelAsync(Connection connection, Request request)
         {
             try
             {
