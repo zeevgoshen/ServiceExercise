@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Net;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -11,16 +8,15 @@ namespace ServiceExercise
 {
     public sealed class RequestsService : IService
     {
-        private static int _sum = 0;
-        Stopwatch watch = null;
-
+        private static int          _sum = 0;
+        Stopwatch                   watch = null;
         private static Connection[] connectionArray;
 
      
         public RequestsService(int _MaxConnections)
         {
             connectionArray = new Connection[_MaxConnections];
-            watch = System.Diagnostics.Stopwatch.StartNew();
+            watch = Stopwatch.StartNew();
         }
  
 
@@ -36,8 +32,8 @@ namespace ServiceExercise
         public async void sendRequest(Request request)
         {
             Console.WriteLine("sendRequest started");
-            Random random = new Random();
-            int i = 0;
+            Random  random = new Random();
+            int     i = 0;
             
             try
             {
@@ -65,7 +61,7 @@ namespace ServiceExercise
             List<Task<int>> tasks = new List<Task<int>>();
             //int sum = 0;
 
-            tasks.Add(Task.Run(() => ProcessCard(connection, request)));
+            tasks.Add(Task.Run(() => ConnectionRunCommand(connection, request)));
             
 
             var results = await Task.WhenAll(tasks);
@@ -74,12 +70,12 @@ namespace ServiceExercise
             {
                 //_sum
                 //Console.WriteLine(item);
-                Interlocked.Add(ref _sum, connection.runCommand(request.Command));
+                Interlocked.Add(ref _sum, item);
             }
             //It will execute all the tasks concurrently
         }
 
-        public static int ProcessCard(Connection connection, Request request)
+        public static int ConnectionRunCommand(Connection connection, Request request)
         {
             return connection.runCommand(request.Command);
         }
