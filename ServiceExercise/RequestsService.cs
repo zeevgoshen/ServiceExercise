@@ -40,7 +40,10 @@ namespace ServiceExercise
 
                 i = random.Next(0, connectionArray.Length);
 
-                connectionArray[i] = new Connection();
+                if (connectionArray[i] == null)
+                {
+                    connectionArray[i] = new Connection();
+                }
 
                 Console.WriteLine($"using connection number - #{ i }.");
 
@@ -63,7 +66,7 @@ namespace ServiceExercise
             try
             {
 
-                tasks.Add(Task.Run(() => ConnectionRunCommand(connection, request)));
+                tasks.Add(Task.Run(() => SendRequestInternal(connection, request)));
 
                 var results = await Task.WhenAll(tasks);
 
@@ -79,7 +82,7 @@ namespace ServiceExercise
             }
         }
 
-        public static int ConnectionRunCommand(Connection connection, Request request)
+        public static int SendRequestInternal(Connection connection, Request request)
         {
             try
             {
