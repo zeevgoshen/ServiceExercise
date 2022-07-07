@@ -32,6 +32,7 @@ namespace ServiceExercise
                 watch.Stop();
                 var elapsedMs = watch.ElapsedMilliseconds;
                 Console.WriteLine($"Total execution time: { elapsedMs }");
+                Console.WriteLine("The sum result should be devided by the number of clients.");
                 return _sum;
             }
             else
