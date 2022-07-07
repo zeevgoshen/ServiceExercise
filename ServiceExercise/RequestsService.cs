@@ -100,7 +100,14 @@ namespace ServiceExercise
         {
             try
             {
-                return connection.runCommand(request.Command);
+                int result = 0;
+                
+                if (request != null && connection != null)
+                {
+                    result = connection.runCommand(request.Command);
+                }
+
+                return result;
             }
             catch (Exception ex)
             {
