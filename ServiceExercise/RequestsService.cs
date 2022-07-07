@@ -11,7 +11,7 @@ namespace ServiceExercise
         private static int          _sum = 0;
         Stopwatch                   watch = null;
         private static Connection[] connectionArray;
-        private object _lock = new object();
+        private object              _lock = new object();
 
         public RequestsService(int _MaxConnections)
         {
@@ -28,16 +28,31 @@ namespace ServiceExercise
             return _sum;
         }
 
+
         // should not block
         public async void sendRequest(Request request)
         {
             Console.WriteLine("sendRequest started");
-            Random  random = new Random();
-            int     i = 0;
-            
+             
             try
             {
+                await ConnectAndSendRequestParallelAsync(CreateOrUseExistingConnection(), request);
 
+                Console.WriteLine("sendRequest ended");
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
+        
+        public Connection CreateOrUseExistingConnection()
+        {
+            Random random = new Random();
+            int i = 0;
+
+            try
+            {
                 i = random.Next(0, connectionArray.Length);
 
                 if (connectionArray[i] == null)
@@ -47,23 +62,19 @@ namespace ServiceExercise
                         if (connectionArray[i] == null)
                         {
                             connectionArray[i] = new Connection();
-                            Console.WriteLine($" --- Creating a new connection:  #{ i }. ---");
+                            Console.WriteLine($" ----------- Creating a new connection:  #{ i }.");
                         }
                     }
                 }
+                Console.WriteLine($"Using connection number - #{ i }.");
+                return connectionArray[i];
 
-                Console.WriteLine($"using connection number - #{ i }.");
-
-                await ConnectAndSendRequestParallelAsync(connectionArray[i], request);
-
-                Console.WriteLine("sendRequest ended");
             }
             catch (Exception ex)
             {
                 throw new Exception(ex.Message);
             }
         }
- 
 
         public static async Task ConnectAndSendRequestParallelAsync(Connection connection, Request request)
         {
