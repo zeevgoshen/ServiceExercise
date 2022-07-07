@@ -13,7 +13,7 @@ namespace ServiceExercise
         private static Connection[] connectionArray;
         private object              _lock = new object();
         static Task t;
-
+        static List<Task<int>> tasks = new List<Task<int>>();
         public RequestsService(int _MaxConnections)
         {
             connectionArray = new Connection[_MaxConnections];
@@ -89,7 +89,7 @@ namespace ServiceExercise
             try
             {
                 Console.WriteLine("ConnectAndSendRequestParallelAsync started");
-                List<Task<int>> tasks = new List<Task<int>>();
+                //List<Task<int>> tasks = new List<Task<int>>();
 
                 tasks.Add(Task.Run(() => Interlocked.Add(ref _sum, SendRequestInternal(connection, request))));
 
