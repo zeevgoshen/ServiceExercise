@@ -13,15 +13,15 @@ namespace ServiceExercise
         private Stopwatch                       watch = null;
         private static Connection[]             connectionArray;
         private object                          _lock = new object();
-        private static Task                     allTasks;
+        private static Task                     mainTask;
         private static ConcurrentBag<Task<int>> concurrentTasks = new ConcurrentBag<Task<int>>();
         private static int                      NumberOfClients = 0;
 
         public RequestsService(int _MaxConnections, int _NumberOfClients)
         {
-            connectionArray = new Connection[_MaxConnections];
-            watch = Stopwatch.StartNew();
-            NumberOfClients = _NumberOfClients;
+            connectionArray     = new Connection[_MaxConnections];
+            watch               = Stopwatch.StartNew();
+            NumberOfClients     = _NumberOfClients;
         }
  
 
@@ -29,9 +29,9 @@ namespace ServiceExercise
         {
             try
             {
-                allTasks.Wait();
+                mainTask.Wait();
 
-                if (allTasks.Status == TaskStatus.RanToCompletion)
+                if (mainTask.Status == TaskStatus.RanToCompletion)
                 {
                     watch.Stop();
                     var elapsedMs = watch.ElapsedMilliseconds;
@@ -68,8 +68,8 @@ namespace ServiceExercise
                 throw new Exception(ex.Message);
             }
         }
-        
-        public Connection CreateOrUseExistingConnection()
+
+        private Connection CreateOrUseExistingConnection()
         {
             try
             {
@@ -95,15 +95,15 @@ namespace ServiceExercise
             }
         }
 
-        public static async Task ConnectAndSendRequestParallelAsync(Connection connection, Request request)
+        private static async Task ConnectAndSendRequestParallelAsync(Connection connection, Request request)
         {
             try
             {
                 Console.WriteLine($"ConnectAndSendRequestParallelAsync started using connection { connection.GetHashCode() }");
 
                 concurrentTasks.Add(Task.Run(() => Interlocked.Add(ref _sum, SendRequestInternal(connection, request))));
-                allTasks = Task.WhenAll(concurrentTasks);
-                await allTasks;
+                mainTask = Task.WhenAll(concurrentTasks);
+                await mainTask;
 
                 Console.WriteLine("ConnectAndSendRequestParallelAsync ended");
             }
@@ -113,7 +113,7 @@ namespace ServiceExercise
             }
         }
 
-        public static int SendRequestInternal(Connection connection, Request request)
+        private static int SendRequestInternal(Connection connection, Request request)
         {
             try
             {
