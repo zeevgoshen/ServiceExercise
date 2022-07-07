@@ -35,18 +35,27 @@ namespace ServiceExercise
         // should not block
         public async void sendRequest(Request request)
         {
-            Console.WriteLine("sendRequest called");
+            Console.WriteLine("sendRequest started");
             Random random = new Random();
+            int i = 0;
+            
+            try
+            {
 
-            int i = random.Next(0, connectionArray.Length);
+                i = random.Next(0, connectionArray.Length);
 
-            connectionArray[i] = new Connection();
+                connectionArray[i] = new Connection();
 
-            Console.WriteLine($"using connection number - #{ i }.");
+                Console.WriteLine($"using connection number - #{ i }.");
 
-            await ConnectAndSendRequestParallelAsync(connectionArray[i], request);
+                await ConnectAndSendRequestParallelAsync(connectionArray[i], request);
 
-            Console.WriteLine("sendRequest ended");
+                Console.WriteLine("sendRequest ended");
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
         }
  
 
