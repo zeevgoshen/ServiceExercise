@@ -32,10 +32,10 @@ namespace ServiceExercise
         // should not block
         public async void sendRequest(Request request)
         {
-            Console.WriteLine("sendRequest started");
-             
             try
             {
+                Console.WriteLine("sendRequest started");
+             
                 await ConnectAndSendRequestParallelAsync(CreateOrUseExistingConnection(), request);
 
                 Console.WriteLine("sendRequest ended");
