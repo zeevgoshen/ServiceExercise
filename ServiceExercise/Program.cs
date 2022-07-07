@@ -10,7 +10,7 @@ namespace ServiceExercise {
 
         static void Main(string[] args) {
 
-            RequestsService service = new RequestsService(CONNECTION_COUNT);
+            RequestsService service = new RequestsService(CONNECTION_COUNT, CLIENTS_COUNT);
 
             List<Task> clientTasks = new List<Task>();
 

@@ -9,35 +9,45 @@ namespace ServiceExercise
 {
     public sealed class RequestsService : IService
     {
-        private static int          _sum = 0;
-        Stopwatch                   watch = null;
-        private static Connection[] connectionArray;
-        private object              _lock = new object();
-        static Task t;
-        static ConcurrentBag<Task<int>> tasks = new ConcurrentBag<Task<int>>();
-        public RequestsService(int _MaxConnections)
+        private static int                      _sum = 0;
+        private Stopwatch                       watch = null;
+        private static Connection[]             connectionArray;
+        private object                          _lock = new object();
+        private static Task                     allTasks;
+        private static ConcurrentBag<Task<int>> concurrentTasks = new ConcurrentBag<Task<int>>();
+        private static int                      NumberOfClients = 0;
+
+        public RequestsService(int _MaxConnections, int _NumberOfClients)
         {
             connectionArray = new Connection[_MaxConnections];
             watch = Stopwatch.StartNew();
+            NumberOfClients = _NumberOfClients;
         }
  
 
         public int getSummary()
-
         {
-            t.Wait();
+            try
+            {
+                allTasks.Wait();
 
-            if (t.Status == TaskStatus.RanToCompletion)
-            {
-                watch.Stop();
-                var elapsedMs = watch.ElapsedMilliseconds;
-                Console.WriteLine($"Total execution time: { elapsedMs }");
-                Console.WriteLine("The sum result should be divided by the number of clients.");
-                return _sum;
+                if (allTasks.Status == TaskStatus.RanToCompletion)
+                {
+                    watch.Stop();
+                    var elapsedMs = watch.ElapsedMilliseconds;
+                    Console.WriteLine($"Total execution time: { elapsedMs }");
+                    Console.WriteLine("The sum result should be divided by the number of clients.");
+                    Console.WriteLine($"{_sum/NumberOfClients} requests per client.");
+                    return _sum;
+                }
+                else
+                {
+                    return -1;
+                }
             }
-            else
+            catch (Exception ex)
             {
-                return -1;
+                throw new Exception(ex.Message);
             }
         }
 
@@ -91,9 +101,9 @@ namespace ServiceExercise
             {
                 Console.WriteLine($"ConnectAndSendRequestParallelAsync started using connection { connection.GetHashCode() }");
 
-                tasks.Add(Task.Run(() => Interlocked.Add(ref _sum, SendRequestInternal(connection, request))));
-                t = Task.WhenAll(tasks);
-                await t;
+                concurrentTasks.Add(Task.Run(() => Interlocked.Add(ref _sum, SendRequestInternal(connection, request))));
+                allTasks = Task.WhenAll(concurrentTasks);
+                await allTasks;
 
                 Console.WriteLine("ConnectAndSendRequestParallelAsync ended");
             }
