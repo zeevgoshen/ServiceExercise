@@ -59,7 +59,6 @@ namespace ServiceExercise
         {
             Console.WriteLine("ConnectAndSendRequestParallelAsync");
             List<Task<int>> tasks = new List<Task<int>>();
-            //int sum = 0;
 
             tasks.Add(Task.Run(() => ConnectionRunCommand(connection, request)));
             
@@ -68,11 +67,8 @@ namespace ServiceExercise
 
             foreach (var item in results)
             {
-                //_sum
-                //Console.WriteLine(item);
                 Interlocked.Add(ref _sum, item);
             }
-            //It will execute all the tasks concurrently
         }
 
         public static int ConnectionRunCommand(Connection connection, Request request)
