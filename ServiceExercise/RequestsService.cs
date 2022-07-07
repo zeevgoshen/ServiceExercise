@@ -32,7 +32,7 @@ namespace ServiceExercise
                 watch.Stop();
                 var elapsedMs = watch.ElapsedMilliseconds;
                 Console.WriteLine($"Total execution time: { elapsedMs }");
-                Console.WriteLine("The sum result should be devided by the number of clients.");
+                Console.WriteLine("The sum result should be divided by the number of clients.");
                 return _sum;
             }
             else
@@ -73,11 +73,10 @@ namespace ServiceExercise
                         if (connectionArray[i] == null)
                         {
                             connectionArray[i] = new Connection();
-                            Console.WriteLine($" ----------- Creating a new connection:  #{ i }.");
+                            Console.WriteLine($" ----------- Creating a new connection:  #{ i } - {connectionArray[i].GetHashCode()}.");
                         }
                     }
                 }
-                //Console.WriteLine($"Using connection number - #{ i }.");
                 return connectionArray[i];
             }
             catch (Exception ex)
@@ -90,14 +89,12 @@ namespace ServiceExercise
         {
             try
             {
-                Console.WriteLine("ConnectAndSendRequestParallelAsync started");
-                //List<Task<int>> tasks = new List<Task<int>>();
+                Console.WriteLine($"ConnectAndSendRequestParallelAsync started using connection { connection.GetHashCode() }");
 
                 tasks.Add(Task.Run(() => Interlocked.Add(ref _sum, SendRequestInternal(connection, request))));
-
-                t = Task.WhenAll(tasks) ;
-
+                t = Task.WhenAll(tasks);
                 await t;
+
                 Console.WriteLine("ConnectAndSendRequestParallelAsync ended");
             }
             catch (Exception ex)
@@ -124,6 +121,5 @@ namespace ServiceExercise
                 throw new Exception(ex.Message);
             }
         }
-
     }
 }
