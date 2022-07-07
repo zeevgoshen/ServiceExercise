@@ -12,6 +12,7 @@ namespace ServiceExercise
         Stopwatch                   watch = null;
         private static Connection[] connectionArray;
         private object              _lock = new object();
+        static Task t;
 
         public RequestsService(int _MaxConnections)
         {
@@ -21,11 +22,21 @@ namespace ServiceExercise
  
 
         public int getSummary()
+
         {
-            watch.Stop();
-            var elapsedMs = watch.ElapsedMilliseconds;
-            Console.WriteLine($"Total execution time: { elapsedMs }");
-            return _sum;
+            t.Wait();
+
+            if (t.Status == TaskStatus.RanToCompletion)
+            {
+                watch.Stop();
+                var elapsedMs = watch.ElapsedMilliseconds;
+                Console.WriteLine($"Total execution time: { elapsedMs }");
+                return _sum;
+            }
+            else
+            {
+                return -1;
+            }
         }
 
 
@@ -80,14 +91,11 @@ namespace ServiceExercise
                 Console.WriteLine("ConnectAndSendRequestParallelAsync started");
                 List<Task<int>> tasks = new List<Task<int>>();
 
-                tasks.Add(Task.Run(() => SendRequestInternal(connection, request)));
+                tasks.Add(Task.Run(() => Interlocked.Add(ref _sum, SendRequestInternal(connection, request))));
 
-                var results = await Task.WhenAll(tasks);
+                t = Task.WhenAll(tasks);
 
-                foreach (var item in results)
-                {
-                    Interlocked.Add(ref _sum, item);
-                }
+                 
                 Console.WriteLine("ConnectAndSendRequestParallelAsync ended");
             }
             catch (Exception ex)
