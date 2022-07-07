@@ -48,12 +48,10 @@ namespace ServiceExercise
         
         public Connection CreateOrUseExistingConnection()
         {
-            Random random = new Random();
-            int i = 0;
-
             try
             {
-                i = random.Next(0, connectionArray.Length);
+                Random random = new Random();
+                int i = random.Next(0, connectionArray.Length);
 
                 if (connectionArray[i] == null)
                 {
@@ -66,9 +64,8 @@ namespace ServiceExercise
                         }
                     }
                 }
-                Console.WriteLine($"Using connection number - #{ i }.");
+                //Console.WriteLine($"Using connection number - #{ i }.");
                 return connectionArray[i];
-
             }
             catch (Exception ex)
             {
@@ -78,11 +75,10 @@ namespace ServiceExercise
 
         public static async Task ConnectAndSendRequestParallelAsync(Connection connection, Request request)
         {
-            Console.WriteLine("ConnectAndSendRequestParallelAsync started");
-            List<Task<int>> tasks = new List<Task<int>>();
-
             try
             {
+                Console.WriteLine("ConnectAndSendRequestParallelAsync started");
+                List<Task<int>> tasks = new List<Task<int>>();
 
                 tasks.Add(Task.Run(() => SendRequestInternal(connection, request)));
 
