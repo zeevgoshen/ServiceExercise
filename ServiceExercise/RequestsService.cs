@@ -9,19 +9,19 @@ namespace ServiceExercise
 {
     public sealed class RequestsService : IService
     {
-        private static int                      _sum = 0;
+        private static int                      sum = 0;
         private Stopwatch                       watch = null;
         private static Connection[]             connectionArray;
-        private object                          _lock = new object();
+        private object                          syncLock = new object();
         private static Task                     mainTask;
         private static ConcurrentBag<Task<int>> concurrentTasks = new ConcurrentBag<Task<int>>();
-        private static int                      NumberOfClients = 0;
+        private static int                      numberOfClients = 0;
 
-        public RequestsService(int _MaxConnections, int _NumberOfClients)
+        public RequestsService(int _maxConnections, int _numberOfClients)
         {
-            connectionArray     = new Connection[_MaxConnections];
+            connectionArray     = new Connection[_maxConnections];
             watch               = Stopwatch.StartNew();
-            NumberOfClients     = _NumberOfClients;
+            numberOfClients     = _numberOfClients;
         }
  
 
@@ -37,8 +37,8 @@ namespace ServiceExercise
                     var elapsedMs = watch.ElapsedMilliseconds;
                     Console.WriteLine($"Total execution time: { elapsedMs }");
                     Console.WriteLine("The sum result should be divided by the number of clients.");
-                    Console.WriteLine($"{_sum/NumberOfClients} requests per client.");
-                    return _sum;
+                    Console.WriteLine($"{sum/numberOfClients} requests per client.");
+                    return sum;
                 }
                 else
                 {
@@ -51,8 +51,6 @@ namespace ServiceExercise
             }
         }
 
-
-        // should not block
         public async void sendRequest(Request request)
         {
             try
@@ -78,12 +76,12 @@ namespace ServiceExercise
 
                 if (connectionArray[i] == null)
                 {
-                    lock (_lock)
+                    lock (syncLock)
                     {
                         if (connectionArray[i] == null)
                         {
                             connectionArray[i] = new Connection();
-                            Console.WriteLine($" ----------- Creating a new connection:  #{ i } - {connectionArray[i].GetHashCode()}.");
+                            Console.WriteLine($"----------- Creating a new connection:  #{ i } - {connectionArray[i].GetHashCode()}.");
                         }
                     }
                 }
@@ -101,7 +99,7 @@ namespace ServiceExercise
             {
                 Console.WriteLine($"ConnectAndSendRequestParallelAsync started using connection { connection.GetHashCode() }");
 
-                concurrentTasks.Add(Task.Run(() => Interlocked.Add(ref _sum, SendRequestInternal(connection, request))));
+                concurrentTasks.Add(Task.Run(() => Interlocked.Add(ref sum, SendRequestInternal(connection, request))));
                 mainTask = Task.WhenAll(concurrentTasks);
                 await mainTask;
 
