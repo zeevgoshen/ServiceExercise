@@ -93,9 +93,9 @@ namespace ServiceExercise
 
                 tasks.Add(Task.Run(() => Interlocked.Add(ref _sum, SendRequestInternal(connection, request))));
 
-                t = Task.WhenAll(tasks);
+                t = Task.WhenAll(tasks) ;
 
-                 
+                await t;
                 Console.WriteLine("ConnectAndSendRequestParallelAsync ended");
             }
             catch (Exception ex)
