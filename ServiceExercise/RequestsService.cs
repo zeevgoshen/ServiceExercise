@@ -11,8 +11,8 @@ namespace ServiceExercise
         private static int          _sum = 0;
         Stopwatch                   watch = null;
         private static Connection[] connectionArray;
+        private object _lock = new object();
 
-     
         public RequestsService(int _MaxConnections)
         {
             connectionArray = new Connection[_MaxConnections];
@@ -42,7 +42,11 @@ namespace ServiceExercise
 
                 if (connectionArray[i] == null)
                 {
-                    connectionArray[i] = new Connection();
+                    lock (_lock)
+                    {
+                        connectionArray[i] = new Connection();
+                        Console.WriteLine($"Creating a new connection:  #{ i }.");
+                    }
                 }
 
                 Console.WriteLine($"using connection number - #{ i }.");
