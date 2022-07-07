@@ -9,6 +9,7 @@ namespace ServiceExercise
 {
     public sealed class RequestsService : IService
     {
+        private const string                totalSumMessage = "The sum result should be divided by the number of clients.";
         private int                         sum = 0;
         private Stopwatch                   watch = null;
         private Connection[]                connectionArray;
@@ -35,9 +36,11 @@ namespace ServiceExercise
                 {
                     watch.Stop();
                     var elapsedMs = watch.ElapsedMilliseconds;
-                    Console.WriteLine($"Total execution time: { elapsedMs }");
-                    Console.WriteLine("The sum result should be divided by the number of clients.");
-                    Console.WriteLine($"{sum/numberOfClients} requests per client.");
+                    string executionTimeMessage = $"Total execution time: {elapsedMs}";
+                    Console.WriteLine(executionTimeMessage);
+                    Console.WriteLine(totalSumMessage);
+                    string requestsPerClient = $"{sum / numberOfClients} requests per client.";
+                    Console.WriteLine(requestsPerClient);
                     return sum;
                 }
                 else
@@ -57,7 +60,9 @@ namespace ServiceExercise
             {
                 Console.WriteLine("sendRequest started");
              
-                await ConnectAndSendRequestParallelAsync(CreateOrUseExistingConnection(), request);
+                await ConnectAndSendRequestParallelAsync(
+                    CreateOrUseExistingConnection(),
+                    request);
 
                 Console.WriteLine("sendRequest ended");
             }
@@ -81,7 +86,8 @@ namespace ServiceExercise
                         if (connectionArray[i] == null)
                         {
                             connectionArray[i] = new Connection();
-                            Console.WriteLine($"----------- Creating a new connection:  #{ i } - {connectionArray[i].GetHashCode()}.");
+                            string value = $"----------- Creating a new connection:  #{i} - {connectionArray[i].GetHashCode()}.";
+                            Console.WriteLine(value);
                         }
                     }
                 }
@@ -93,13 +99,17 @@ namespace ServiceExercise
             }
         }
 
-        private async Task ConnectAndSendRequestParallelAsync(Connection connection, Request request)
+        private async Task ConnectAndSendRequestParallelAsync(Connection connection,
+                                                              Request request)
         {
             try
             {
-                Console.WriteLine($"ConnectAndSendRequestParallelAsync started using connection { connection.GetHashCode() }");
+                string beginFunctionLog = $"ConnectAndSendRequestParallelAsync started using connection {connection.GetHashCode()}";
+                Console.WriteLine(beginFunctionLog);
 
-                concurrentTasks.Add(Task.Run(() => Interlocked.Add(ref sum, SendRequestInternal(connection, request))));
+                concurrentTasks.Add(Task.Run(() => Interlocked.Add(ref sum, SendRequestInternal(
+                    connection,
+                    request))));
                 mainTask = Task.WhenAll(concurrentTasks);
                 await mainTask;
 
@@ -111,7 +121,8 @@ namespace ServiceExercise
             }
         }
 
-        private static int SendRequestInternal(Connection connection, Request request)
+        private int SendRequestInternal(Connection connection,
+                                               Request request)
         {
             try
             {
