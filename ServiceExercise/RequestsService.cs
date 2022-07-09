@@ -107,9 +107,11 @@ namespace ServiceExercise
                 string beginFunctionLog = $"ConnectAndSendRequestParallelAsync started using connection {connection.GetHashCode()}";
                 Console.WriteLine(beginFunctionLog);
 
-                concurrentTasks.Add(Task.Run(() => Interlocked.Add(ref sum, SendRequestInternal(
+                concurrentTasks.Add(Task.Run(() => Interlocked.Add(ref sum, 
+                    SendRequestInternal(
                     connection,
-                    request))));
+                    request).Result)));
+
                 mainTask = Task.WhenAll(concurrentTasks);
                 await mainTask;
 
@@ -121,7 +123,7 @@ namespace ServiceExercise
             }
         }
 
-        private int SendRequestInternal(Connection connection,
+        private async Task<int> SendRequestInternal(Connection connection,
                                                Request request)
         {
             try
@@ -130,7 +132,7 @@ namespace ServiceExercise
                 
                 if (request != null && connection != null)
                 {
-                    result = connection.runCommand(request.Command);
+                    result = await Task.FromResult<int>(connection.runCommand(request.Command));
                 }
 
                 return result;
